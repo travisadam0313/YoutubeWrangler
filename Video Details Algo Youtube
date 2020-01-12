@@ -1,0 +1,68 @@
+#Channel Scraper
+
+>library(tuber)
+
+#Log In
+> client_id<-"3169560606-o5nqabh0t1hdhl1694b91uop5spg8mt9.apps.googleusercontent.com"
+> client_secret<-"kXN7ebNNXLEFBadlSmpkoTYt"
+> yt_oauth(app_id = client_id, app_secret = client_secret, token = '')
+Use a local file ('.httr-oauth'), to cache OAuth access credentials between R sessions?
+
+1: Yes
+2: No
+
+Selection: Yes
+Adding .httr-oauth to .gitignore
+Waiting for authentication in browser...
+Press Esc/Ctrl + C to abort
+
+
+> yt_oauth(app_id = client_id, app_secret = client_secret, token = '')
+Waiting for authentication in browser...
+Press Esc/Ctrl + C to abort
+#Above step is going to take you to a site to log-in
+Authentication complete.
+
+#Wrangle the Channel - This example looks at the Joe Rogan Experience Channel
+
+JRC<- list_channel_videos(channel_id = "UCzQUP1qoWDoEbmsQxvdjxgQ", max_results = 2000) #Returned 2,304?
+names(JRC)<-c('ID','Kind','eTag','Long_ID','Video_ID','Published')
+
+#Take a look at result output from get_video_details() contentDetails.videoID
+#Elon Musk Episode searched on youtube.com: https://www.youtube.com/watch?v=ycPr5-27vSI
+#Episode URL Anatomy 'ycPr5-27vSI' is the ID. '&t=8008s' is the run time in seconds.
+
+>Elon<-get_video_details(video_id="ycPr5-27vSI", part = "statistics") --This is the Elon Musk ID.
+>View(Elon) #This is a list vector
+
+#Apply Names to DataFrame
+
+
+#Let's Wrangle Video Statistics
+
+>Elon_Stats<-data.frame(get_video_details(video_id="ycPr5-27vSI",part="statistics"))
+>names(Elon_Stats)<-c('Kind','eTag','Total_Results','Results_Per_Page','KindII','eTag','Video_ID','View_Count','Like_Count','Dislike_Count','Favorite_Count','Comment_Count')
+
+#Create List of Video ID's from Channel to be Scrubbed
+
+>JRE_I<-data.frame(JRC$Video_ID)
+> names(JRE_I)<-c('ID')
+
+
+#Loop Through Video ID's Collecting Statistics
+
+for(i in 1:nrow(JRE_I))
++ {
++     print(paste0("Current working on: ", result$items[[1]]$id)
++     result <- get_video_details(video_id=as.character(JRE_I$ID[i]),part="statistics,snippet")
++     JRE_I$Title[i]<-as.character(result$items[[1]]$statistics$viewCount)
++     JRE_I$Views[i]<-as.character(result$items[[1]]$statistics$viewCount)
++     JRE_I$Likes[i]<-as.character(result$items[[1]]$statistics$likeCount)
++     JRE_I$Dislikes[i]<-as.character(result$items[[1]]$statistics$dislikeCount)
++     JRE_I$Comments[i]<-as.character(result$items[[1]]$statistics$commentCount)
++ }
+
+#Write Results into .csv
+
+write.csv(JRE_I,"JRE.csv",row.names = FALSE)
+
